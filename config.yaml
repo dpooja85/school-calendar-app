@@ -1,0 +1,13 @@
+# School Calendar Sync - Configuration
+# =====================================
+
+# Google Doc URL containing the school calendar
+google_doc_url: "https://docs.google.com/document/d/1TUukMCnAUy4e09vFZn7YTfTTtaXDovsGbAEIzqxLVHA/edit"
+
+# Output settings
+output_file: "output/school_events.ics"
+calendar_name: "School Events Calendar"
+
+# School year START (Aug-Dec use this year, Jan-Jun use this year + 1)
+# For 2025/2026 school year, set to 2025
+school_year_start: 2025
