@@ -5,7 +5,9 @@ School Calendar Sync - MVP
 Extracts school events from a Google Doc and generates an .ics calendar file.
 
 Usage:
-    python main.py
+    python main.py              # Parse and generate ICS (with confirmation)
+    python main.py --preview    # Preview events without generating ICS
+    python main.py --debug      # Show raw document content for debugging
 """
 
 import os
@@ -400,8 +402,9 @@ def generate_ics(events: list, calendar_name: str, output_path: str) -> str:
 
 def main():
     """Main entry point."""
-    # Check for debug mode
+    # Check for command line flags
     debug_mode = '--debug' in sys.argv
+    preview_mode = '--preview' in sys.argv
 
     print("=" * 50)
     print("School Calendar Sync - MVP")
@@ -452,10 +455,36 @@ def main():
         print("-" * 50)
         return
 
-    # Parse events
-    print("\nParsing events...")
-    events = parse_events(doc_text, default_year)
-    print(f"✓ Found {len(events)} events")
+    # Parse events from Google Doc
+    print("\nParsing events from Google Doc...")
+    gdoc_events = parse_events(doc_text, default_year)
+    print(f"✓ Found {len(gdoc_events)} events from Google Doc")
+
+    # Parse events from local email files (if enabled)
+    email_events = []
+    email_config = config.get('email', {})
+    if email_config.get('enabled', False):
+        try:
+            from src.email_parser import (
+                extract_events_from_email_files,
+                convert_email_events_to_calendar_format
+            )
+
+            raw_email_events = extract_events_from_email_files(config)
+            if raw_email_events:
+                email_events = convert_email_events_to_calendar_format(raw_email_events, config)
+
+        except ImportError as e:
+            print(f"\nWarning: Email parsing not available: {e}")
+            print("Install ollama package: pip install ollama")
+        except Exception as e:
+            print(f"\nWarning: Email parsing failed: {e}")
+
+    # Combine all events
+    events = gdoc_events + email_events
+
+    if email_events:
+        print(f"\n✓ Combined: {len(gdoc_events)} (Doc) + {len(email_events)} (Email) = {len(events)} total")
 
     if events:
         # Show all events grouped by month for verification
@@ -484,6 +513,12 @@ def main():
         print("\n" + "=" * 60)
         print(f"TOTAL: {len(events)} events")
         print("=" * 60)
+
+    # Preview mode: show events and exit without generating ICS
+    if preview_mode:
+        print("\n[Preview mode - no ICS file generated]")
+        print("Run without --preview to generate the calendar file.")
+        return
 
     # Ask for confirmation before generating
     print("\nDoes this look correct? (y/n): ", end='')

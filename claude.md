@@ -269,6 +269,7 @@ pip install -r requirements.txt
 | python-dateutil | >=2.8.2 | Flexible date parsing |
 | pytz | >=2024.1 | Timezone handling |
 | pyyaml | >=6.0 | Configuration file parsing |
+| ollama | >=0.1.0 | Local LLM for email parsing |
 
 ### File Structure
 ```
@@ -288,12 +289,39 @@ school-calendar-app/
 ### API Scopes
 - `https://www.googleapis.com/auth/documents.readonly` - Read-only access to Google Docs
 
+### Decision 12: Local Email Files + Ollama (Privacy-First)
+**Choice:** Use local text files + Ollama LLM instead of Gmail API for email parsing.
+
+**Why:**
+- **Privacy**: No cloud API reads user's emails - all processing is local
+- **Control**: User manually saves only the emails they want processed
+- **No OAuth complexity**: Doesn't require Gmail API scope or additional permissions
+- **Offline capable**: Works without internet once Ollama model is downloaded
+- **Cost-free**: Ollama runs locally, no API costs
+
+**How it works:**
+1. User saves school emails as `.txt` files in `input_emails/` folder
+2. Script reads all `.txt` files from folder
+3. Ollama LLM extracts calendar events from unstructured text
+4. Events are merged with Google Doc events
+
+**Why Ollama (llama3.1:8b):**
+- Runs locally on M2 MacBook Air (3-8 sec/email)
+- Good balance of quality and speed
+- 8B parameter model fits in memory
+- JSON output mode for structured responses
+
+**Alternatives Rejected:**
+- Gmail API: Privacy concerns, complex OAuth, reads all emails
+- Cloud LLMs (OpenAI, Claude): Sends email content to cloud, API costs
+- Regex parsing: Too brittle for unstructured emails
+
 ---
 
 ## Future Enhancements
 
-### Phase 2 (Post-MVP)
-1. **Gmail Integration** - Parse school emails for events
+### Phase 2
+1. ~~Gmail Integration~~ → **Implemented as local files + Ollama**
 2. **Grade-Level Filtering** - Generate separate calendars per grade
 3. **Duplicate Detection** - Track previously imported events
 4. **Configurable Timezone** - Add to config.yaml
@@ -307,6 +335,14 @@ school-calendar-app/
 ---
 
 ## Changelog
+
+### v1.1.0 - 2025-01-29
+- Added email parsing with local files + Ollama LLM
+- Privacy-first approach: no Gmail API, all local processing
+- Created `src/email_parser.py` module
+- Added `input_emails/` folder for email text files
+- Updated config.yaml with email settings
+- Added test file for email parser validation
 
 ### v1.0.0 (MVP) - 2025-01-28
 - Initial implementation

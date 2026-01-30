@@ -15,3 +15,6 @@ pytz>=2024.1
 
 # Configuration
 pyyaml>=6.0
+
+# Local LLM for email parsing (privacy-first, no cloud APIs)
+ollama>=0.1.0

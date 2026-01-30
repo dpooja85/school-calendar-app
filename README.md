@@ -10,7 +10,27 @@ A simple Python script that extracts school events from a Google Doc and creates
 - A Google account
 - Access to the school calendar Google Doc
 
-### Step 1: Install Python and Dependencies
+### Step 1: Run Setup Script
+
+```bash
+# Make executable and run (one-time setup)
+chmod +x setup.sh && ./setup.sh
+```
+
+This automatically:
+- Installs Python (if needed)
+- Creates virtual environment
+- Installs all Python dependencies
+- Installs Ollama (for email parsing)
+- Downloads the LLM model (~4.7GB)
+- Starts the Ollama service
+
+> **Note:** You'll need to run `source venv/bin/activate` each time you open a new terminal before running the script.
+
+### Manual Setup (Alternative)
+
+<details>
+<summary>Click to expand manual steps</summary>
 
 ```bash
 # Install Python via Homebrew (if not already installed)
@@ -24,9 +44,13 @@ source venv/bin/activate
 
 # Install project dependencies
 pip install -r requirements.txt
-```
 
-> **Note:** You'll need to run `source venv/bin/activate` each time you open a new terminal before running the script.
+# Install and start Ollama
+brew install ollama
+brew services start ollama
+ollama pull llama3.1:8b
+```
+</details>
 
 ### Step 2: Set Up Google Docs API Credentials
 
@@ -94,11 +118,84 @@ On first run, a browser window will open asking you to authorize the app. Sign i
 
 Done! Your school events are now in your calendar.
 
+## Email Parsing with Ollama (Optional)
+
+Extract calendar events from school emails using a local LLM. **Privacy-first**: no cloud APIs, all processing happens on your machine.
+
+### Setup Ollama
+
+```bash
+# Install Ollama (macOS)
+brew install ollama
+
+# Or via curl
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Start Ollama (runs in background)
+ollama serve
+
+# Download the model (~4.7GB, one-time)
+ollama pull llama3.1:8b
+
+# Verify it works
+ollama run llama3.1:8b "Say hello"
+```
+
+### How to Add Email Events
+
+**Step 1:** Save school emails as text files in `input_emails/`:
+
+```bash
+# Example: input_emails/mcas_dates.txt
+Subject: MCAS Testing Dates
+Date: January 23, 2025
+
+MCAS testing dates for grades 3, 4, and 5:
+* March 30, 31 - ELA
+* May 12, 13 - MATH
+* May 19, 20 - Science (Grade 5 only)
+```
+
+You can include Subject/Date headers, or just paste the email body.
+
+**Step 2:** Run the script:
+
+```bash
+python main.py
+```
+
+**Step 3:** Import `output/school_events.ics` to your calendar
+
+**Step 4:** (Optional) Delete email files after processing
+
+### Configuration
+
+Edit `config.yaml` to enable/disable email parsing:
+
+```yaml
+email:
+  enabled: true
+  input_folder: "input_emails/"
+  ollama:
+    model: "llama3.1:8b"
+    temperature: 0.1
+```
+
+### Performance
+
+- ~3-8 seconds per email on M2 MacBook Air
+- All processing is local (no data sent to cloud)
+- Email files are gitignored for privacy
+
 ## Project Structure
 
 ```
 school-calendar-app/
 ├── main.py              # Main script
+├── src/
+│   └── email_parser.py  # Local email + Ollama integration
+├── input_emails/        # Put school email .txt files here
+│   └── .gitkeep
 ├── config.yaml          # Configuration
 ├── credentials.json     # Google OAuth credentials (you create this)
 ├── token.json           # Auth token (auto-generated)
@@ -146,9 +243,9 @@ The parser handles common date formats. If your document uses unusual formatting
 - `2025-01-15`
 - Day numbers under month headers (e.g., `15 - School Event`)
 
-## Future Enhancements (Post-MVP)
+## Future Enhancements
 
-- [ ] Gmail email parsing
+- [x] Email parsing with local LLM (Ollama)
 - [ ] Grade-level filtering
 - [ ] Automatic updates
 - [ ] Multiple calendar outputs

@@ -11,3 +11,20 @@ calendar_name: "School Events Calendar"
 # School year START (Aug-Dec use this year, Jan-Jun use this year + 1)
 # For 2025/2026 school year, set to 2025
 school_year_start: 2025
+
+# Email parsing (local files + Ollama) - Privacy-first approach
+# Save school emails as .txt files in input_emails/ folder
+email:
+  enabled: true
+  source: "local_files"
+  input_folder: "input_emails/"
+
+  # Parallel processing - number of emails to process simultaneously
+  # Higher = faster, but uses more RAM. Recommended: 2-4 for 8GB RAM, 4-8 for 16GB+
+  parallel_workers: 4
+
+  # Ollama LLM settings (runs locally, no cloud API)
+  ollama:
+    model: "llama3.1:8b"
+    host: "http://localhost:11434"
+    temperature: 0.1

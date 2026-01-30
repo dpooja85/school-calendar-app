@@ -2,6 +2,10 @@
 credentials.json
 token.json
 
+# Email files (privacy - never commit personal emails)
+input_emails/*.txt
+!input_emails/.gitkeep
+
 # Output files
 output/
 
